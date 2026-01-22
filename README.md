@@ -1,3 +1,7 @@
+This repository has been moved to [ReduxISU/quantumsolver](https://github.com/ReduxISU/quantumsolver) and will be maintained there from now on.
+
+---
+
 This is a skeleton proposal for a flask application that
 will integrate with Redux to provide qiskit based solvers
 for problems.
