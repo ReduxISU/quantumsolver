@@ -31,3 +31,4 @@ jobs:
           python deutsch_jozsa_quantum.py
           python deutsch_quantum.py
           python sat_quantum.py
+          python shors_quantum.py
