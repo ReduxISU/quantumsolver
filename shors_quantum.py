@@ -19,18 +19,19 @@ Hard Limit = N < 10 bits (example N <= 511)
 Note: As numbers get above 7 bits in size, this algorithm can take longer than 30 seconds to run.
 """
 
-from qiskit import QuantumCircuit, transpile, QuantumRegister, ClassicalRegister
-from qiskit.circuit.library import QFTGate, UnitaryGate
-from qiskit.circuit import Gate
-from qiskit_aer import AerSimulator
-import qiskit.qasm2
-from fractions import Fraction
-import numpy as np
-import random
-import math
-import matplotlib.pyplot as plt
 import argparse
+import math
+import random
 import time
+from fractions import Fraction
+
+import matplotlib.pyplot as plt
+import numpy as np
+import qiskit.qasm2
+from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
+from qiskit.circuit import Gate
+from qiskit.circuit.library import QFTGate, UnitaryGate
+from qiskit_aer import AerSimulator
 
 # --------------------------------------------------
 #                 Circuits
