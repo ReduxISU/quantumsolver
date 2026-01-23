@@ -50,5 +50,3 @@ WARNING: This is a development server. Do not use it in a production deployment.
  * Running on http://127.0.0.1:5000
 Press CTRL+C to quit
 ```
-
-To interact with it, see the example [`testdeutsch.py`](testdeutsch.py)
