@@ -22,10 +22,8 @@ Note: As numbers get above 7 bits in size, this algorithm can take longer than 3
 import argparse
 import math
 import random
-import time
 from fractions import Fraction
 
-import matplotlib.pyplot as plt
 import numpy as np
 import qiskit.qasm2
 from qiskit import ClassicalRegister, QuantumCircuit, QuantumRegister, transpile
@@ -48,16 +46,16 @@ class ShorCircuit(QuantumCircuit):
         N (int): The integer to be factored.
     """
 
-    def __init__(self, a, N):
+    def __init__(self, a, n):
         # Calculate required qubits
-        self.n_target = N.bit_length()
+        self.n_target = n.bit_length()
         self.n_count = 2 * self.n_target
         total_qubits = self.n_count + self.n_target
 
         super().__init__(total_qubits, self.n_count)
 
         self.a = a
-        self.N = N
+        self.n = n
 
         self._create_circuit()
 
@@ -73,28 +71,28 @@ class ShorCircuit(QuantumCircuit):
             UnitaryGate: A custom gate implementing the controlled modular exponentiation.
         """
         dim_target = 2**self.n_target
-        U_matrix = np.zeros((dim_target, dim_target), dtype=complex)
+        u_matrix = np.zeros((dim_target, dim_target), dtype=complex)
 
         # 1. Calculate the effective multiplier: a^(2^i) mod N
-        effective_multiplier = pow(self.a, power_of_a, self.N)
+        effective_multiplier = pow(self.a, power_of_a, self.n)
 
         # 2. Build the permutation matrix for the modular multiplication
         for y in range(dim_target):
-            if y < self.N:
-                target_y = (effective_multiplier * y) % self.N
+            if y < self.n:
+                target_y = (effective_multiplier * y) % self.n
             else:
                 target_y = y
-            U_matrix[target_y, y] = 1
+            u_matrix[target_y, y] = 1
 
         # 3. Create the Controlled-U matrix (block diagonal)
-        CU_matrix = np.block(
+        cu_matrix = np.block(
             [
                 [np.eye(dim_target), np.zeros((dim_target, dim_target))],
-                [np.zeros((dim_target, dim_target)), U_matrix],
+                [np.zeros((dim_target, dim_target)), u_matrix],
             ]
         )
 
-        return UnitaryGate(CU_matrix, label=f"C-U{power_of_a}")
+        return UnitaryGate(cu_matrix, label=f"C-U{power_of_a}")
 
     def _create_circuit(self):
         """
@@ -109,10 +107,10 @@ class ShorCircuit(QuantumCircuit):
         # 3. Apply sequence of Controlled-U operations
         for i in range(self.n_count):
             power_of_a = 2**i
-            CU_gate = self._get_controlled_unitary_matrix(power_of_a)
+            cu_gate = self._get_controlled_unitary_matrix(power_of_a)
             target_qubits = list(range(self.n_count, self.num_qubits))
             control_qubit = i
-            self.append(CU_gate, target_qubits + [control_qubit])
+            self.append(cu_gate, target_qubits + [control_qubit])
 
         # 4. Apply Inverse Quantum Fourier Transform (IQFT) to counting register
         qft_gate = QFTGate(self.n_count).inverse()
@@ -145,8 +143,8 @@ class ShorN15Circuit(QuantumCircuit):
         N (int): Number to factor (strictly 15).
     """
 
-    def __init__(self, a, N):
-        if N != 15 or a != 2:
+    def __init__(self, a, n):
+        if n != 15 or a != 2:
             raise ValueError("ShorN15Circuit is strictly for N=15 and a=2.")
 
         self.n_target = 4
@@ -154,7 +152,7 @@ class ShorN15Circuit(QuantumCircuit):
         total_qubits = self.n_count + self.n_target
         super().__init__(total_qubits, self.n_count)
         self.a = a
-        self.N = N
+        self.n = n
         self._create_circuit()
 
     def _apply_manual_gates(self, ctrl_qubit, stage_index):
@@ -224,8 +222,8 @@ class ShorDisplayCircuit(QuantumCircuit):
         N (int): Number to factor.
     """
 
-    def __init__(self, a, N):
-        self.n_target = N.bit_length()
+    def __init__(self, a, n):
+        self.n_target = n.bit_length()
         self.n_count = 2 * self.n_target
         qr_count = QuantumRegister(self.n_count, "cnt")
         qr_target = QuantumRegister(self.n_target, "tgt")
@@ -234,7 +232,7 @@ class ShorDisplayCircuit(QuantumCircuit):
         super().__init__(qr_count, qr_target, cr)
 
         self.a = a
-        self.N = N
+        self.n = n
         self._build_visual_only()
 
     def _build_visual_only(self):
@@ -284,8 +282,8 @@ class ShorAlgorithm:
         simulator: The backend simulator instance.
     """
 
-    def __init__(self, N, circuit_class=ShorCircuit, max_attempts=-1, simulator=None):
-        self.N = N
+    def __init__(self, n, circuit_class=ShorCircuit, max_attempts=-1, simulator=None):
+        self.n = n
         self.circuit_class = circuit_class
         self.simulator = simulator if simulator else AerSimulator()
         self.max_attempts = max_attempts
@@ -325,8 +323,8 @@ class ShorAlgorithm:
         Public method to start the recursive factoring process.
         Returns a list of sorted prime factors.
         """
-        print(f"--- Factoring N={self.N} ---")
-        return sorted(self._recursive_factor(self.N))
+        #print(f"--- Factoring N={self.n} ---")
+        return sorted(self._recursive_factor(self.n))
 
     def _recursive_factor(self, current_n):
         """
@@ -342,36 +340,36 @@ class ShorAlgorithm:
         if current_n == 1:
             return []
         if self._is_prime(current_n):
-            print(f"[Base Case] {current_n} is prime.")
+            #print(f"[Base Case] {current_n} is prime.")
             return [current_n]
 
         # Step 2: Classical Checks
         # Check if even
         if current_n % 2 == 0:
-            print(f"[Classical] {current_n} is even. Split into 2 and {current_n//2}.")
+            #print(f"[Classical] {current_n} is even. Split into 2 and {current_n//2}.")
             return [2] + self._recursive_factor(current_n // 2)
 
         # Check perfect powers
         base = self._check_perfect_power(current_n)
         if base:
             exponent = int(round(math.log(current_n, base)))
-            print(f"[Classical] {current_n} is a perfect power ({base}^{exponent}).")
+            #print(f"[Classical] {current_n} is a perfect power ({base}^{exponent}).")
             factors = []
             for _ in range(exponent):
                 factors.extend(self._recursive_factor(base))
             return factors
 
         # Step 3: Quantum Period Finding
-        print(
-            f"[Quantum] Attempting to split {current_n} using Quantum Period Finding..."
-        )
+        #print(
+        #   f"[Quantum] Attempting to split {current_n} using Quantum Period Finding..."
+        #)
         factor_a, factor_b = self._attempt_quantum_split(current_n)
 
         if factor_a and factor_b:
-            print(f"[Split Found] {current_n} -> {factor_a} * {factor_b}")
+            #print(f"[Split Found] {current_n} -> {factor_a} * {factor_b}")
             return self._recursive_factor(factor_a) + self._recursive_factor(factor_b)
         else:
-            print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
+            #print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
             return [current_n]
 
     def _attempt_quantum_split(self, n_to_split):
@@ -408,7 +406,7 @@ class ShorAlgorithm:
             self.chosen_a = random.choice(candidates)
             candidates.remove(self.chosen_a)
 
-            print(f"  Attempt {attempts_count} (a={self.chosen_a})")
+            #print(f"  Attempt {attempts_count} (a={self.chosen_a})")
 
             # Step 3: Run Quantum Circuit (Period Finding)
             circuit_cls = self.circuit_class
@@ -424,7 +422,7 @@ class ShorAlgorithm:
             phase = int(readout, 2) / (2**self.qpe_circuit.n_count)
             frac = Fraction(phase).limit_denominator(n_to_split)
             r_measured = frac.denominator
-            print(f"  -> Measured Phase: {phase:.4f} (~{frac}) -> Denom r={r_measured}")
+            #print(f"  -> Measured Phase: {phase:.4f} (~{frac}) -> Denom r={r_measured}")
 
             # Verify if r is actually the period.
             # The Quantum Phase Estimation might return a factor of the true period (e.g., r/2).
@@ -434,30 +432,31 @@ class ShorAlgorithm:
                 if r_candidate > 0 and pow(self.chosen_a, r_candidate, n_to_split) == 1:
                     r_true = r_candidate
                     if k > 1:
-                        print(
-                            f"  [+] Found true period r={r_true} (using multiple {k} * {r_measured})"
-                        )
+                        #print(
+                        #   f"  [+] Found true period r={r_true} (using multiple {k} * {r_measured})"
+                        #)
+                        pass
                     break
 
             if r_true is None:
-                print(
-                    f"  [-] Measured r={r_measured} is invalid (a^r != 1 mod N). Retry."
-                )
+                #print(
+                #    f"  [-] Measured r={r_measured} is invalid (a^r != 1 mod N). Retry."
+                #)
                 continue
 
             r = r_true
 
             # Step 5: Validate Order 'r' properties for factoring
             if r % 2 != 0:
-                print(f"  -> Period r={r} is odd. Cannot split N. Retry.")
+                #print(f"  -> Period r={r} is odd. Cannot split N. Retry.")
                 continue
 
             # Check if a^(r/2) == -1 (mod N). If so, the factors will be trivial.
             half_power = pow(self.chosen_a, r // 2, n_to_split)
             if half_power == n_to_split - 1:
-                print(
-                    f"  -> Period r={r} yields trivial factors (a^(r/2) = -1 mod N). Retry."
-                )
+                #print(
+                #    f"  -> Period r={r} yields trivial factors (a^(r/2) = -1 mod N). Retry."
+                #)
                 continue
 
             # Step 6: Calculate Factors using gcd(a^(r/2) ± 1, N)
@@ -470,7 +469,7 @@ class ShorAlgorithm:
             if guess_2 not in [1, n_to_split]:
                 return guess_2, n_to_split // guess_2
 
-            print("  -> Trivial factors found. Retry.")
+            #print("  -> Trivial factors found. Retry.")
 
         # Return failure if loop finishes without success
         return None, None
@@ -481,31 +480,30 @@ class ShorAlgorithm:
 # --------------------------------------------------
 
 
-def solve(N: int | dict) -> dict:
+def solve(n: int | dict) -> dict:
     """
     Main entry point for the Shor's Algorithm solver.
 
     Args:
-        N (int | dict): The integer to factor (or a dict containing "N").
+        n (int | dict): The integer to factor (or a dict containing "N").
 
     Returns:
         dict: A dictionary containing the list of prime factors and the QASM string.
               Format: {"answer": [p1, p2...], "qasm": "..."}
     """
-    start_time = time.time()
     # Step 1: Parse Input
-    N_val = N["N"] if isinstance(N, dict) else N
+    n_val = n["N"] if isinstance(n, dict) else n
 
-    if not isinstance(N_val, int):
+    if not isinstance(n_val, int):
         return {"answer": "Input must be an integer", "qasm": "NA"}
 
     # Hard Limit: N must be < 10 bits (example, N <= 511)
-    if N_val.bit_length() >= 10:
+    if n_val.bit_length() >= 10:
         return {"answer": "Input too large (limit < 10 bits)", "qasm": "NA"}
 
     # Step 2: Select Circuit Strategy
     # Usage of specialized circuit for N=15 vs generic for others
-    if N_val == 15:
+    if n_val == 15:
         selected_circuit = ShorN15Circuit
     else:
         selected_circuit = ShorCircuit
@@ -513,7 +511,7 @@ def solve(N: int | dict) -> dict:
     # Step 3: Run Shor's Algorithm
     simulator = AerSimulator()
     shor_calc = ShorAlgorithm(
-        N_val, circuit_class=selected_circuit, max_attempts=-1, simulator=simulator
+        n_val, circuit_class=selected_circuit, max_attempts=-1, simulator=simulator
     )
 
     factors = shor_calc.get_prime_factors()
@@ -523,48 +521,49 @@ def solve(N: int | dict) -> dict:
 
     try:
         # Case A: Special N=15 (Real circuit)
-        if N_val == 15 and shor_calc.qpe_circuit:
+        if n_val == 15 and shor_calc.qpe_circuit:
             qasm_string = qiskit.qasm2.dumps(shor_calc.qpe_circuit)
 
         # Case B: All others (Dummy Display Circuit)
-        elif N_val > 3:
+        elif n_val > 3:
             a_vis = shor_calc.chosen_a if shor_calc.chosen_a else 2
-            dummy_circuit = ShorDisplayCircuit(a=a_vis, N=N_val)
+            dummy_circuit = ShorDisplayCircuit(a=a_vis, n=n_val)
             qasm_string = qiskit.qasm2.dumps(dummy_circuit)
 
-    except Exception as e:
+    except (TypeError, ValueError, AttributeError) as e:
         qasm_string = f"Error generating QASM: {e}"
-
-    end_time = time.time()
-    elapsed_time = end_time - start_time
-    print(f"Execution Time NEW: {elapsed_time:.4f} seconds")
 
     return {"answer": factors, "qasm": qasm_string}
 
+def testit(n, expected):
+    result = solve(n)
+    answer = result["answer"]
+    assert answer == expected, f"Failed for N={n}, got {answer}, expected {expected}"
 
-if __name__ == "__main__":
+
+def main():
+    """ run tests and such """
     parser = argparse.ArgumentParser(description="Shor's Algorithm Quantum Solver")
     parser.add_argument(
-        "N", type=int, nargs="?", default=15, help="The integer N to factor"
+        "N", type=int, nargs="*", help="The integer N to factor"
     )
     args = parser.parse_args()
-
-    # Execute
-    result = solve(args.N)
-
-    print(f"\nFinal Prime Factors: {result['answer']}")
-
-    # --- Visualization Logic ---
-    qasm_str = result["qasm"]
-
-    if qasm_str and "OPENQASM" in qasm_str:
-        print("\nVisualizing Circuit from QASM...")
-        try:
-            # This simulates what the visualizer would do
-            qc_from_qasm = QuantumCircuit.from_qasm_str(qasm_str)
-            qc_from_qasm.draw(output="mpl", style="iqp", fold=-1)
-            plt.show()
-        except Exception as e:
-            print(f"Could not visualize QASM: {e}")
+    if len(args.N) == 0:
+        # Run tests
+        testit(15, [3, 5])
+        testit(21, [3, 7])
+        testit(77, [7, 11])
+        testit(85, [5, 17])
+        testit(105, [3, 5, 7])
+        testit(81, [3,3,3,3])
+        testit(29, [29])
+        testit(89, [89])
     else:
-        print(f"\nNo circuit to visualize: {qasm_str}")
+        # Execute
+        for n in args.N:
+            result = solve(n)
+            print(f"\nFinal Prime Factors: {result['answer']}")
+
+
+if __name__ == "__main__":
+    main()
