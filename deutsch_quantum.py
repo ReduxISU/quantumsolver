@@ -10,10 +10,7 @@ Output - dictionary
 {'answer': 'constant' or 'balanced'}
 """
 
-import io
-import base64
 import argparse
-import matplotlib.pyplot as plt
 from qiskit import QuantumCircuit, qasm2
 from qiskit_aer import AerSimulator
 
@@ -83,20 +80,6 @@ def export_qasm(qc: QuantumCircuit) -> str:
     return qasm2.dumps(qc)
 
 
-def circuit_png_base64(qc: QuantumCircuit) -> str:
-    """
-    Create diagram of circuit
-    Currently just for fun and testing
-    """
-    fig = qc.draw(output="mpl")
-    buf = io.BytesIO()
-    fig.savefig(buf, format="png", bbox_inches="tight", dpi=200)
-    buf.seek(0)
-    data = base64.b64encode(buf.read()).decode("utf-8")
-    plt.close(fig)
-    return data
-
-
 def solve(data: list) -> dict:
     """
     Main entry point
@@ -154,7 +137,6 @@ def main():
             result, qc = deutsch_algorithm(f)
 
             print(f"Oracle f{case}:")
-            print(qc.draw())
             print("Answer:", result["answer"])
             print("QASM snippet:")
             print(export_qasm(qc)[:200], "...\n")
