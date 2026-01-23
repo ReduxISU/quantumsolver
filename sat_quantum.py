@@ -93,7 +93,6 @@ def main():
     url = None
     if parser.parse_args().baseurl is not None:
         url = f"{args.baseurl}/{args.endpoint}"
-    print(url)
 
     tryit(
         url,
