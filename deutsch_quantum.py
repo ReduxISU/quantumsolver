@@ -8,16 +8,13 @@ Representing the states of 2 bits
 
 Output - dictionary
 {'answer': 'constant' or 'balanced'}
-TODO: Coordinate what information Visualization group needs,
-Possible to send quantum circuit to them.
-Send information via QASM
 """
 
 import io
 import base64
 import argparse
 import matplotlib.pyplot as plt
-from qiskit import QuantumCircuit, qasm2, transpile
+from qiskit import QuantumCircuit, qasm2
 from qiskit_aer import AerSimulator
 
 
@@ -79,7 +76,7 @@ def deutsch_algorithm(function: QuantumCircuit) -> tuple[dict, QuantumCircuit]:
     return {"answer": answer}, qc
 
 
-def export_QASM(qc: QuantumCircuit) -> str:
+def export_qasm(qc: QuantumCircuit) -> str:
     """
     Export a Qiskit circuit to QASM
     """
@@ -127,12 +124,12 @@ def solve(data: list) -> dict:
     result, qc = deutsch_algorithm(f)
 
     # Attach QASM circuit
-    result["qasm"] = export_QASM(qc)
+    result["qasm"] = export_qasm(qc)
 
     return result
 
 
-if __name__ == "__main__":
+def main():
     """
     Internal testing + optional ASCII and QASM visualization
     python deutsch_quantum.py --show-circuits
@@ -160,4 +157,7 @@ if __name__ == "__main__":
             print(qc.draw())
             print("Answer:", result["answer"])
             print("QASM snippet:")
-            print(export_QASM(qc)[:200], "...\n")
+            print(export_qasm(qc)[:200], "...\n")
+
+if __name__ == "__main__":
+    main()

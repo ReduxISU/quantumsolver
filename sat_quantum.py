@@ -94,9 +94,15 @@ def main():
     if parser.parse_args().baseurl is not None:
         url = f"{args.baseurl}/{args.endpoint}"
 
+    longexpr = ("(x1 | !x2 | x3)",
+                "(!x1 | x3 | x1)",
+                "(x2 | !x3 | x1)",
+                "(!x3 | x4 | !x2 | x1)",
+                "(!x4 | !x1)",
+                "(x4 | x3 | !x1)")
     tryit(
         url,
-        "(x1 | !x2 | x3) & (!x1 | x3 | x1) & (x2 | !x3 | x1) & (!x3 | x4 | !x2 | x1) & (!x4 | !x1) & (x4 | x3 | !x1)",
+        ' & '.join(longexpr),
         set(("0000", "0101", "0111", "1000", "1110")),
         args.show_circuits,
     )
