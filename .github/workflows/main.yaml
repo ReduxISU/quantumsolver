@@ -21,3 +21,13 @@ jobs:
         run: |
           . .venv/bin/activate
           python -m pip install --upgrade pip
+          python -m pip install -r requirements.txt
+
+      - name: algorithm tests
+        run: |
+          . .venv/bin/activate
+          python bernstein_vazirani_quantum.py
+          python deutsch_classical.py
+          python deutsch_jozsa_quantum.py
+          python deutsch_quantum.py
+          python sat_quantum.py
