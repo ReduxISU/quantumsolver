@@ -1,0 +1,23 @@
+name: dotnet build
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: setup virtual env
+        run: python3 -m venv .venv
+
+      - name: setup packages
+        run: |
+          . .venv/bin/activate
+          python -m pip install --upgrade pip
