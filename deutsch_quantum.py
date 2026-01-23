@@ -17,7 +17,7 @@ import io
 import base64
 import argparse
 import matplotlib.pyplot as plt
-from qiskit import QuantumCircuit, qasm2 ,transpile
+from qiskit import QuantumCircuit, qasm2, transpile
 from qiskit_aer import AerSimulator
 
 
@@ -32,13 +32,14 @@ def deutsch_function(case: int) -> QuantumCircuit:
     """
     if case not in [1, 2, 3, 4]:
         raise ValueError("'case' must be 1, 2, 3, or 4")
-    
+
     f = QuantumCircuit(2)
     if case in [2, 3]:
         f.cx(0, 1)
     if case in [3, 4]:
         f.x(1)
     return f
+
 
 def compile_circuit(function: QuantumCircuit) -> QuantumCircuit:
     """
@@ -57,9 +58,10 @@ def compile_circuit(function: QuantumCircuit) -> QuantumCircuit:
 
     # hadamard on the first qubit and measure
     qc.h(range(n))
-    qc.measure(range(n),range(n))
+    qc.measure(range(n), range(n))
 
     return qc
+
 
 def deutsch_algorithm(function: QuantumCircuit) -> tuple[dict, QuantumCircuit]:
     """
@@ -73,8 +75,9 @@ def deutsch_algorithm(function: QuantumCircuit) -> tuple[dict, QuantumCircuit]:
     qc = compile_circuit(function)
     result = AerSimulator().run(qc, shots=1, memory=True).result()
     measurements = result.get_memory()
-    answer = "constant" if measurements[0] == '0' else "balanced"
+    answer = "constant" if measurements[0] == "0" else "balanced"
     return {"answer": answer}, qc
+
 
 def export_QASM(qc: QuantumCircuit) -> str:
     """
@@ -82,18 +85,20 @@ def export_QASM(qc: QuantumCircuit) -> str:
     """
     return qasm2.dumps(qc)
 
+
 def circuit_png_base64(qc: QuantumCircuit) -> str:
     """
     Create diagram of circuit
     Currently just for fun and testing
     """
-    fig = qc.draw(output='mpl')
+    fig = qc.draw(output="mpl")
     buf = io.BytesIO()
-    fig.savefig(buf, format='png', bbox_inches='tight', dpi=200)
+    fig.savefig(buf, format="png", bbox_inches="tight", dpi=200)
     buf.seek(0)
-    data = base64.b64encode(buf.read()).decode('utf-8')
+    data = base64.b64encode(buf.read()).decode("utf-8")
     plt.close(fig)
     return data
+
 
 def solve(data: list) -> dict:
     """
@@ -103,7 +108,7 @@ def solve(data: list) -> dict:
     Returns a JSON-ready dictionary with:
     {
         "answer": "...",
-        "qasm" : "..."    
+        "qasm" : "..."
     }
     """
     # Determine oracle
@@ -116,7 +121,7 @@ def solve(data: list) -> dict:
         if data[1]:
             f = deutsch_function(2)  # [0, 1] f2
         else:
-            f = deutsch_function(1)  # [0, 0] f1 
+            f = deutsch_function(1)  # [0, 0] f1
 
     # Run algorithm
     result, qc = deutsch_algorithm(f)
@@ -156,6 +161,3 @@ if __name__ == "__main__":
             print("Answer:", result["answer"])
             print("QASM snippet:")
             print(export_QASM(qc)[:200], "...\n")
-
-
-
