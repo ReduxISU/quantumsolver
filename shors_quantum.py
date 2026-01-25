@@ -536,6 +536,7 @@ def solve(n: int | dict) -> dict:
     return {"answer": factors, "qasm": qasm_string}
 
 def testit(n, expected):
+    """ test shor's algorithm """
     result = solve(n)
     answer = result["answer"]
     assert answer == expected, f"Failed for N={n}, got {answer}, expected {expected}"
