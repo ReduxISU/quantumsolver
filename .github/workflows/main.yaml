@@ -27,7 +27,6 @@ jobs:
         run: |
           . .venv/bin/activate
           python bernstein_vazirani_quantum.py
-          python deutsch_classical.py
           python deutsch_jozsa_quantum.py
           python deutsch_quantum.py
           python sat_quantum.py
