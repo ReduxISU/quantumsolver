@@ -368,9 +368,8 @@ class ShorAlgorithm:
         if factor_a and factor_b:
             #print(f"[Split Found] {current_n} -> {factor_a} * {factor_b}")
             return self._recursive_factor(factor_a) + self._recursive_factor(factor_b)
-        else:
-            #print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
-            return [current_n]
+        #print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
+        return [current_n]
 
     def _attempt_quantum_split(self, n_to_split):
         """
