@@ -10,7 +10,6 @@ timeout = 30
 
 bind = [
     "unix:/run/quantumsolver/gunicorn.sock",
-    "0.0.0.0:27100",
     "[::]:27100",
 ]
 
