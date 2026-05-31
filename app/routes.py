@@ -20,6 +20,11 @@ def index():
     return "Welcome to the quantum solver."
 
 
+@app.route("/health")
+def health():
+    return {"status": "ok"}
+
+
 def deutsch_jozsa_target(queue, data):
     """solve using deutsch-jozsa's algorithm and put result in queue"""
     queue.put(deutsch_jozsa_quantum.solve(data))
