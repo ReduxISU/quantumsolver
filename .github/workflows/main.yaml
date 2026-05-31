@@ -23,6 +23,12 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -r requirements.txt
 
+      - name: audit dependencies
+        run: |
+          . .venv/bin/activate
+          pip install pip-audit
+          pip-audit -r requirements.txt
+
       - name: algorithm tests
         run: |
           . .venv/bin/activate

@@ -3,48 +3,58 @@
 """This is a quantum solver for the SAT problem. It accepts a boolean
 expression and finds a set of subsitutions for the variables that
 produces a true result of the expression using Grover's algorithm.
-
-It is based on the tutorial on:
-https://qiskit-community.github.io/qiskit-algorithms/tutorials/07_grover_examples.html
 """
 
 import argparse
+import math
 import re
 import requests
-from qiskit import qasm2
+from qiskit import QuantumCircuit, qasm2
+from qiskit.circuit.library import grover_operator
 from qiskit.circuit.library.phase_oracle import PhaseOracleGate
 from qiskit.primitives import StatevectorSampler
-from qiskit_algorithms import AmplificationProblem, Grover
 
 
 def solve(data):
     """Solve a SAT expression using a quantum circuit"""
 
     # Redux's expressions are -almost- completely compatible,
-    # just substitue '!' for '~'.
+    # just substitute '!' for '~'.
     expr = data["boolexpr"].replace("!", "~")
 
-    # extract the variable names and sort them in lexicographic order.
-    # this is so we can marry the results with the variable names
-    # correctly at the end
+    # Extract variable names sorted lexicographically so results can be
+    # paired with variable names correctly at the end.
     expr_vars = sorted(list(set(re.findall(r"[A-Za-z0-9_]+", expr))))
 
-    # create a phase gate oracle from the boolean expression and
-    # do that crazy Grover thing.
     oracle = PhaseOracleGate(expr, var_order=expr_vars)
-    problem = AmplificationProblem(oracle)
-    grover = Grover(sampler=StatevectorSampler())
-    result = grover.amplify(problem)
+    n_qubits = oracle.num_qubits
 
-    # reverse the string and pair it with the variable names
-    best_guess = result.top_measurement[::-1]
+    # Wrap oracle gate in a circuit for grover_operator (function API, no
+    # deprecated GroverOperator class).
+    oracle_circuit = QuantumCircuit(n_qubits)
+    oracle_circuit.append(oracle, range(n_qubits))
+    grover_op = grover_operator(oracle_circuit)
+
+    # Optimal iterations for ~1 solution: floor(pi/4 * sqrt(N))
+    iterations = max(1, round(math.pi / 4 * math.sqrt(2**n_qubits)))
+
+    circuit = QuantumCircuit(n_qubits, n_qubits)
+    circuit.h(range(n_qubits))
+    for _ in range(iterations):
+        circuit.compose(grover_op, inplace=True)
+    circuit.measure(range(n_qubits), range(n_qubits))
+
+    counts = StatevectorSampler().run([circuit]).result()[0].data.c.get_counts()
+
+    # Qiskit bitstrings are big-endian (qubit n-1 leftmost); reverse so
+    # index 0 maps to qubit 0 / expr_vars[0].
+    best_guess = max(counts, key=counts.get)[::-1]
     r = [f"{expr_vars[i]}:{best_guess[i] == '1'}" for i in range(len(expr_vars))]
-    r = ",".join(r)
-    r = f"({r})"
+    r = f"({','.join(r)})"
     return {
         "answer": r,
         "answer_bitstring": best_guess,
-        "qasm": qasm2.dumps(grover.construct_circuit(problem, 4, True)),
+        "qasm": qasm2.dumps(circuit),
     }
 
 
