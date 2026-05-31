@@ -2,7 +2,7 @@
 set -euo pipefail
 
 REF="${1:-main}"
-DEPLOY_DIR="/opt/quantumsolver"
+DEPLOY_DIR="/home/redux/quantumsolver"
 VENV="$DEPLOY_DIR/.venv"
 SERVICE="quantumsolver"
 
