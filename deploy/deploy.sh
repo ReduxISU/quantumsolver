@@ -15,11 +15,16 @@ echo "==> Resetting to ${REF}..."
 # Try as a remote branch first; fall back to tag or commit hash.
 git reset --hard "origin/${REF}" 2>/dev/null || git reset --hard "${REF}"
 
-echo "==> Rebuilding virtualenv (removes stale deps)..."
-rm -rf "$VENV"
-python3 -m venv "$VENV"
-"$VENV/bin/pip" install --quiet --upgrade pip
-"$VENV/bin/pip" install --quiet -r requirements.txt
+echo "==> Syncing dependencies..."
+if [ ! -d "$VENV" ]; then
+    python3 -m venv "$VENV"
+    "$VENV/bin/pip" install --quiet --upgrade pip
+fi
+"$VENV/bin/pip-sync" requirements.txt 2>/dev/null || {
+    # pip-sync not yet installed (first deploy); bootstrap then retry.
+    "$VENV/bin/pip" install --quiet pip-tools
+    "$VENV/bin/pip-sync" requirements.txt
+}
 
 echo "==> Restarting service..."
 systemctl restart "$SERVICE"
