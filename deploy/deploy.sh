@@ -30,4 +30,3 @@ echo "==> Restarting service..."
 sudo /usr/bin/systemctl restart "$SERVICE"
 
 echo "==> Done."
-sudo /usr/bin/systemctl status "$SERVICE" --no-pager --lines 5
