@@ -27,7 +27,7 @@ fi
 }
 
 echo "==> Restarting service..."
-systemctl restart "$SERVICE"
+sudo /usr/bin/systemctl restart "$SERVICE"
 
 echo "==> Done."
-systemctl status "$SERVICE" --no-pager --lines 5
+sudo /usr/bin/systemctl status "$SERVICE" --no-pager --lines 5
