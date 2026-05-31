@@ -3,14 +3,16 @@ upstream quantumsolver {
 }
 
 server {
-    listen 80;
-    server_name YOUR_DOMAIN_OR_IP;
+    listen 443 ssl;
+    server_name redux.isu.edu;
 
-    # Redirect HTTP to HTTPS once you have a cert (uncomment after certbot):
-    # return 301 https://$host$request_uri;
+    ssl_certificate     /etc/ssl/certs/redux.isu.edu.crt;
+    ssl_certificate_key /etc/ssl/private/redux.isu.edu.key;
 
-    location / {
-        proxy_pass http://quantumsolver;
+    # The trailing slash on both sides strips /quantumsolver from the path
+    # before forwarding, so /quantumsolver/health reaches Flask as /health.
+    location /quantumsolver/ {
+        proxy_pass http://quantumsolver/;
 
         proxy_set_header Host              $host;
         proxy_set_header X-Real-IP         $remote_addr;
@@ -22,33 +24,4 @@ server {
         proxy_read_timeout 35s;
         proxy_connect_timeout 5s;
     }
-
-    location /health {
-        proxy_pass http://quantumsolver;
-        access_log off;
-    }
 }
-
-# HTTPS server — fill in after: sudo certbot --nginx -d YOUR_DOMAIN
-# server {
-#     listen 443 ssl;
-#     server_name YOUR_DOMAIN;
-#     ssl_certificate     /etc/letsencrypt/live/YOUR_DOMAIN/fullchain.pem;
-#     ssl_certificate_key /etc/letsencrypt/live/YOUR_DOMAIN/privkey.pem;
-#     include /etc/letsencrypt/options-ssl-nginx.conf;
-#
-#     location / {
-#         proxy_pass http://quantumsolver;
-#         proxy_set_header Host              $host;
-#         proxy_set_header X-Real-IP         $remote_addr;
-#         proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
-#         proxy_set_header X-Forwarded-Proto $scheme;
-#         proxy_read_timeout 35s;
-#         proxy_connect_timeout 5s;
-#     }
-#
-#     location /health {
-#         proxy_pass http://quantumsolver;
-#         access_log off;
-#     }
-# }
