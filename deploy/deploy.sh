@@ -20,11 +20,7 @@ if [ ! -d "$VENV" ]; then
     python3 -m venv "$VENV"
     "$VENV/bin/pip" install --quiet --upgrade pip
 fi
-if ! "$VENV/bin/pip-sync" --version &>/dev/null; then
-    # pip-sync not yet installed (first deploy); bootstrap it.
-    "$VENV/bin/pip" install --quiet pip-tools
-fi
-"$VENV/bin/pip-sync" requirements.txt
+"$VENV/bin/pip" install --quiet --upgrade -r requirements.txt
 
 echo "==> Restarting service..."
 sudo /usr/bin/systemctl restart "$SERVICE"
