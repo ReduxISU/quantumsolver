@@ -95,8 +95,9 @@ def solver_prime_factorization_quantum():
 
 def run_with_timeout(func, data):
     """run a function with a timeout using multiprocessing"""
-    queue = multiprocessing.Queue()
-    process = multiprocessing.Process(target=func, args=(queue, data))
+    ctx = multiprocessing.get_context("spawn")
+    queue = ctx.Queue()
+    process = ctx.Process(target=func, args=(queue, data))
     process.start()
     process.join(25)
 
