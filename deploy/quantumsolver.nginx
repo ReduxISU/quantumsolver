@@ -11,7 +11,7 @@ server {
 
     # The trailing slash on both sides strips /quantumsolver from the path
     # before forwarding, so /quantumsolver/health reaches Flask as /health.
-    location /quantumsolver/ {
+    location ^~ /quantumsolver/ {
         proxy_pass http://quantumsolver/;
 
         proxy_set_header Host              $host;
