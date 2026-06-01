@@ -19,17 +19,20 @@ INVALID = {"0000", "0101", "0111", "1000", "1110"}
 
 @pytest.fixture
 def client():
+    """Flask test client fixture."""
     flask_app.config["TESTING"] = True
     with flask_app.test_client() as c:
         yield c
 
 
 def test_direct():
+    """Solve directly and check that the answer is a valid satisfying assignment."""
     result = sat_quantum.solve({"boolexpr": LONG_EXPR})
     assert result["answer"] not in INVALID
 
 
 def test_api(client):
+    """POST to /sat-quantum and check that the answer is a valid satisfying assignment."""
     resp = client.post("/sat-quantum", json={"boolexpr": LONG_EXPR})
     assert resp.status_code == 200
     assert resp.json["answer"] not in INVALID

@@ -15,6 +15,7 @@ CASES = [
 
 @pytest.fixture
 def client():
+    """Flask test client fixture."""
     flask_app.config["TESTING"] = True
     with flask_app.test_client() as c:
         yield c
@@ -22,11 +23,13 @@ def client():
 
 @pytest.mark.parametrize("f,expected", CASES)
 def test_direct(f, expected):
+    """Solve directly and check constant/balanced classification."""
     assert deutsch.solve(f)["answer"] == expected
 
 
 @pytest.mark.parametrize("f,expected", CASES)
 def test_api(client, f, expected):
+    """POST to /deutsch-quantum and check constant/balanced classification."""
     resp = client.post("/deutsch-quantum", json=f)
     assert resp.status_code == 200
     assert resp.json["answer"] == expected

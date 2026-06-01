@@ -19,6 +19,7 @@ DICT_CASES = [
 
 @pytest.fixture
 def client():
+    """Flask test client fixture."""
     flask_app.config["TESTING"] = True
     with flask_app.test_client() as c:
         yield c
@@ -26,16 +27,19 @@ def client():
 
 @pytest.mark.parametrize("f,expected", LIST_CASES)
 def test_direct_list(f, expected):
+    """Solve directly with list input and check constant/balanced classification."""
     assert dj.solve(f)["answer"] == expected
 
 
 @pytest.mark.parametrize("data,expected", DICT_CASES)
 def test_direct_dict(data, expected):
+    """Solve directly with dict input and check constant/balanced classification."""
     assert dj.solve(data)["answer"] == expected
 
 
 @pytest.mark.parametrize("f,expected", LIST_CASES)
 def test_api_list(client, f, expected):
+    """POST list input to /deutsch-jozsa-quantum and check classification."""
     resp = client.post("/deutsch-jozsa-quantum", json=f)
     assert resp.status_code == 200
     assert resp.json["answer"] == expected
@@ -43,6 +47,7 @@ def test_api_list(client, f, expected):
 
 @pytest.mark.parametrize("data,expected", DICT_CASES)
 def test_api_dict(client, data, expected):
+    """POST dict input to /deutsch-jozsa-quantum and check classification."""
     resp = client.post("/deutsch-jozsa-quantum", json=data)
     assert resp.status_code == 200
     assert resp.json["answer"] == expected
