@@ -270,7 +270,30 @@ class ShorDisplayCircuit(QuantumCircuit):
 # --------------------------------------------------
 
 
-class ShorAlgorithm:
+def _is_prime(n):
+    """Check if n is prime using trial division."""
+    if n < 2:
+        return False
+    if n in (2, 3):
+        return True
+    if n % 2 == 0:
+        return False
+    for i in range(3, int(n**0.5) + 1, 2):
+        if n % i == 0:
+            return False
+    return True
+
+
+def _check_perfect_power(n):
+    """Return base b if n == b^k for some k >= 2, else None."""
+    for k in range(2, int(math.log2(n)) + 1):
+        root = round(n ** (1 / k))
+        if root**k == n:
+            return root
+    return None
+
+
+class ShorAlgorithm:  # pylint: disable=too-few-public-methods
     """
     Completes the full prime factorization using Shor's Algorithm.
     Recursively splits factors until only primes remain.
@@ -290,33 +313,6 @@ class ShorAlgorithm:
         self.chosen_a = None
         self.r = None
         self.qpe_circuit = None
-
-    def _is_prime(self, n):
-        """
-        Checks if a number is prime using simple trial division.
-        """
-        if n < 2:
-            return False
-        if n in (2, 3):
-            return True
-        if n % 2 == 0:
-            return False
-        for i in range(3, int(n**0.5) + 1, 2):
-            if n % i == 0:
-                return False
-        return True
-
-    def _check_perfect_power(self, n):
-        """
-        Checks if n is a perfect power (n = b^k).
-        Returns the base 'b' if true, else None.
-        """
-        k_max = int(math.log2(n))
-        for k in range(2, k_max + 1):
-            root = round(n ** (1 / k))
-            if root**k == n:
-                return root
-        return None
 
     def get_prime_factors(self):
         """
@@ -339,7 +335,7 @@ class ShorAlgorithm:
         # Step 1: Base case for recursion
         if current_n == 1:
             return []
-        if self._is_prime(current_n):
+        if _is_prime(current_n):
             #print(f"[Base Case] {current_n} is prime.")
             return [current_n]
 
@@ -350,7 +346,7 @@ class ShorAlgorithm:
             return [2] + self._recursive_factor(current_n // 2)
 
         # Check perfect powers
-        base = self._check_perfect_power(current_n)
+        base = _check_perfect_power(current_n)
         if base:
             exponent = int(round(math.log(current_n, base)))
             #print(f"[Classical] {current_n} is a perfect power ({base}^{exponent}).")
@@ -371,6 +367,14 @@ class ShorAlgorithm:
         #print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
         return [current_n]
 
+    def _find_period(self, r_measured, n_to_split):
+        """Return the true period r such that a^r ≡ 1 (mod n), or None."""
+        for k in range(1, 5):
+            r_candidate = r_measured * k
+            if r_candidate > 0 and pow(self.chosen_a, r_candidate, n_to_split) == 1:
+                return r_candidate
+        return None
+
     def _attempt_quantum_split(self, n_to_split):
         """
         Attempts to find a non-trivial factor of n_to_split using the quantum period algorithm.
@@ -381,91 +385,47 @@ class ShorAlgorithm:
         Returns:
             tuple: (factor_1, factor_2) if successful, else (None, None).
         """
-        # Step 1: Pick a random 'a' co-prime to N.
         candidates = [a for a in range(2, n_to_split) if math.gcd(a, n_to_split) == 1]
-
-        # For specific demo N=15, limit candidates to ensure consistent results
         if n_to_split == 15 and self.circuit_class == ShorN15Circuit:
             candidates = [2]
-
         if not candidates:
             return None, None
 
-        # Determine attempt limit
-        if self.max_attempts > 0:
-            limit = min(self.max_attempts, len(candidates))
-        else:
-            limit = len(candidates)
-
+        limit = (min(self.max_attempts, len(candidates))
+                 if self.max_attempts > 0 else len(candidates))
         attempts_count = 0
 
-        # Step 2: Loop through attempts with different 'a' values
         while attempts_count < limit and candidates:
             attempts_count += 1
             self.chosen_a = random.choice(candidates)
             candidates.remove(self.chosen_a)
 
-            #print(f"  Attempt {attempts_count} (a={self.chosen_a})")
-
-            # Step 3: Run Quantum Circuit (Period Finding)
             circuit_cls = self.circuit_class
-            # Fallback to generic circuit if specialized one doesn't apply
             if n_to_split != 15 and circuit_cls == ShorN15Circuit:
                 circuit_cls = ShorCircuit
 
             self.qpe_circuit = circuit_cls(self.chosen_a, n_to_split)
             result = self.qpe_circuit.run_simulation(self.simulator)
 
-            # Step 4: Process Measurement to find Order 'r'
-            readout = result.get_memory()[0]
-            phase = int(readout, 2) / (2**self.qpe_circuit.n_count)
-            frac = Fraction(phase).limit_denominator(n_to_split)
-            r_measured = frac.denominator
-            #print(f"  -> Measured Phase: {phase:.4f} (~{frac}) -> Denom r={r_measured}")
+            phase = int(result.get_memory()[0], 2) / (2**self.qpe_circuit.n_count)
+            r_measured = Fraction(phase).limit_denominator(n_to_split).denominator
 
-            # Verify if r is actually the period.
-            # The Quantum Phase Estimation might return a factor of the true period (e.g., r/2).
-            r_true = None
-            for k in range(1, 5):
-                r_candidate = r_measured * k
-                if r_candidate > 0 and pow(self.chosen_a, r_candidate, n_to_split) == 1:
-                    r_true = r_candidate
-                    break
-
-            if r_true is None:
-                #print(
-                #    f"  [-] Measured r={r_measured} is invalid (a^r != 1 mod N). Retry."
-                #)
+            r = self._find_period(r_measured, n_to_split)
+            if r is None or r % 2 != 0:
                 continue
 
-            r = r_true
-
-            # Step 5: Validate Order 'r' properties for factoring
-            if r % 2 != 0:
-                #print(f"  -> Period r={r} is odd. Cannot split N. Retry.")
-                continue
-
-            # Check if a^(r/2) == -1 (mod N). If so, the factors will be trivial.
+            # Skip if a^(r/2) ≡ -1 (mod n) — factors would be trivial
             half_power = pow(self.chosen_a, r // 2, n_to_split)
             if half_power == n_to_split - 1:
-                #print(
-                #    f"  -> Period r={r} yields trivial factors (a^(r/2) = -1 mod N). Retry."
-                #)
                 continue
 
-            # Step 6: Calculate Factors using gcd(a^(r/2) ± 1, N)
             guess_1 = math.gcd(half_power - 1, n_to_split)
             guess_2 = math.gcd(half_power + 1, n_to_split)
-
-            # Check if we found non-trivial factors
             if guess_1 not in [1, n_to_split]:
                 return guess_1, n_to_split // guess_1
             if guess_2 not in [1, n_to_split]:
                 return guess_2, n_to_split // guess_2
 
-            #print("  -> Trivial factors found. Retry.")
-
-        # Return failure if loop finishes without success
         return None, None
 
 
