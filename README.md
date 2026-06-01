@@ -31,6 +31,12 @@ Then install the requirements:
 pip install -r requirements.txt
 ```
 
+For development (adds pytest, pylint, pip-audit):
+
+```
+pip install -r requirements-dev.txt
+```
+
 Tell it which app we want:
 
 For Windows:
