@@ -21,12 +21,11 @@ jobs:
         run: |
           . .venv/bin/activate
           python -m pip install --upgrade pip
-          python -m pip install -r requirements.txt
+          python -m pip install -r requirements-dev.txt
 
       - name: audit dependencies
         run: |
           . .venv/bin/activate
-          pip install pip-audit
           pip-audit -r requirements.txt
 
       - name: algorithm tests
