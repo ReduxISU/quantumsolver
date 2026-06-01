@@ -1,3 +1,15 @@
 __pycache__/
 quantumsolver.sln
 *~
+
+# virtual environment
+.venv/
+
+# test and coverage artifacts
+.coverage
+.pytest_cache/
+htmlcov/
+
+# editor/OS artifacts
+.DS_Store
+*.swp
