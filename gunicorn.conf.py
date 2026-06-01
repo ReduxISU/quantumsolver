@@ -1,3 +1,5 @@
+"""Gunicorn configuration for quantumsolver."""
+# pylint: disable=invalid-name  # gunicorn requires lowercase config variable names
 import multiprocessing
 
 # Each request blocks for up to 25 s (internal timeout), so sync workers are correct.

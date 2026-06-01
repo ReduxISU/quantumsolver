@@ -1,3 +1,4 @@
+# pylint: disable=redefined-outer-name  # pytest fixture pattern
 import pytest
 from app import app as flask_app
 

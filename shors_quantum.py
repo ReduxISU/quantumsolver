@@ -430,11 +430,6 @@ class ShorAlgorithm:
                 r_candidate = r_measured * k
                 if r_candidate > 0 and pow(self.chosen_a, r_candidate, n_to_split) == 1:
                     r_true = r_candidate
-                    if k > 1:
-                        #print(
-                        #   f"  [+] Found true period r={r_true} (using multiple {k} * {r_measured})"
-                        #)
-                        pass
                     break
 
             if r_true is None:
