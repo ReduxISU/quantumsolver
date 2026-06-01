@@ -28,6 +28,11 @@ jobs:
           . .venv/bin/activate
           pip-audit -r requirements.txt
 
+      - name: lint
+        run: |
+          . .venv/bin/activate
+          pylint --ignore=.venv --fail-under=9.75 *.py app/
+
       - name: algorithm tests
         run: |
           . .venv/bin/activate
