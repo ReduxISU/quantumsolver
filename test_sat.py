@@ -1,4 +1,5 @@
 # pylint: disable=redefined-outer-name  # pytest fixture pattern
+"""Tests for the SAT quantum solver."""
 import pytest
 import sat_quantum
 from app import app as flask_app

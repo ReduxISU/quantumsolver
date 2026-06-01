@@ -1,4 +1,5 @@
 # pylint: disable=redefined-outer-name  # pytest fixture pattern
+"""Tests for the Shor's algorithm quantum solver."""
 import pytest
 import shors_quantum
 from app import app as flask_app
