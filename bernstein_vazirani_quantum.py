@@ -13,10 +13,10 @@
 
 import argparse
 import json
-import math
 import requests
 from qiskit import QuantumCircuit, qasm2
 from qiskit_aer import AerSimulator
+from bits import power_of_two_info
 
 
 def bv_query(s):
@@ -49,18 +49,6 @@ def bv_algorithm(function: QuantumCircuit):
     result = AerSimulator().run(qc, shots=1, memory=True).result()
     return (result.get_memory()[0], qc)
 
-
-def power_of_two_info(n):
-    """Determine whether n is a power of 2 and which one"""
-    if n <= 0:
-        return False, None
-
-    # A number is a power of two if it has exactly one bit set
-    if (n & (n - 1)) == 0:
-        # log2 gives the exponent
-        power = int(math.log2(n))
-        return True, power
-    return False, None
 
 
 def solve(data) -> dict:

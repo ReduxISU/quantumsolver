@@ -11,20 +11,8 @@ where s is a secret string of length n. The output is a json schema:
 import argparse
 import json
 import random
-import math
+from bits import power_of_two_info
 
-
-def power_of_two_info(n):
-    """Is n a power of 2? If so, which one?"""
-    if n <= 0:
-        return False, None
-
-    # A number is a power of two if it has exactly one bit set
-    if (n & (n - 1)) == 0:
-        # log2 gives the exponent
-        power = int(math.log2(n))
-        return True, power
-    return False, None
 
 
 def brute_force_simon(farray):

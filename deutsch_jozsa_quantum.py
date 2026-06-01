@@ -18,10 +18,10 @@ The result is a dictionary:
 """
 
 import argparse
-import math
 import requests
 from qiskit import QuantumCircuit, qasm2
 from qiskit_aer import AerSimulator
+from bits import power_of_two_info
 
 
 def dj_algorithm(function: QuantumCircuit):
@@ -76,18 +76,6 @@ def dj_balanced(num_qubits, fbits):
     qc.barrier()
     return qc
 
-
-def power_of_two_info(n):
-    """Determine if n is a power of 2 and if so, which power of 2."""
-    if n <= 0:
-        return False, None
-
-    # A number is a power of two if it has exactly one bit set
-    if (n & (n - 1)) == 0:
-        # log2 gives the exponent
-        power = int(math.log2(n))
-        return True, power
-    return False, None
 
 
 def solve(data) -> dict:
