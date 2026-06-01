@@ -36,4 +36,4 @@ jobs:
       - name: algorithm tests
         run: |
           . .venv/bin/activate
-          pytest -v
+          pytest -v --cov=. --cov-fail-under=85

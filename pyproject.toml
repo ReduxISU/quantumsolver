@@ -1,2 +1,13 @@
 [tool.pylint.messages_control]
 disable = ["duplicate-code"]
+
+[tool.coverage.run]
+omit = ["test_*.py", "quantumsolver.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if __name__ == .__main__.:",
+    "def main\\(",
+    "def tryit\\(",
+]
