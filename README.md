@@ -3,7 +3,7 @@
 This is a flask application that will integrates with [Redux](https://github.com/ReduxISU/Redux) to provide qiskit based solvers
 for problems.
 
-**Python 3.8 or later is required** (Qiskit 2.x constraint).
+**Python 3.10–3.13 is required.**
 
 ## Getting Started
 To run this, create a python virtual environment and "enter" it
