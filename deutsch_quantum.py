@@ -141,5 +141,6 @@ def main():
             print("QASM snippet:")
             print(export_qasm(qc)[:200], "...\n")
 
+
 if __name__ == "__main__":
     main()

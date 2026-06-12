@@ -319,7 +319,7 @@ class ShorAlgorithm:  # pylint: disable=too-few-public-methods
         Public method to start the recursive factoring process.
         Returns a list of sorted prime factors.
         """
-        #print(f"--- Factoring N={self.n} ---")
+        # print(f"--- Factoring N={self.n} ---")
         return sorted(self._recursive_factor(self.n))
 
     def _recursive_factor(self, current_n):
@@ -336,35 +336,35 @@ class ShorAlgorithm:  # pylint: disable=too-few-public-methods
         if current_n == 1:
             return []
         if _is_prime(current_n):
-            #print(f"[Base Case] {current_n} is prime.")
+            # print(f"[Base Case] {current_n} is prime.")
             return [current_n]
 
         # Step 2: Classical Checks
         # Check if even
         if current_n % 2 == 0:
-            #print(f"[Classical] {current_n} is even. Split into 2 and {current_n//2}.")
+            # print(f"[Classical] {current_n} is even. Split into 2 and {current_n//2}.")
             return [2] + self._recursive_factor(current_n // 2)
 
         # Check perfect powers
         base = _check_perfect_power(current_n)
         if base:
             exponent = int(round(math.log(current_n, base)))
-            #print(f"[Classical] {current_n} is a perfect power ({base}^{exponent}).")
+            # print(f"[Classical] {current_n} is a perfect power ({base}^{exponent}).")
             factors = []
             for _ in range(exponent):
                 factors.extend(self._recursive_factor(base))
             return factors
 
         # Step 3: Quantum Period Finding
-        #print(
+        # print(
         #   f"[Quantum] Attempting to split {current_n} using Quantum Period Finding..."
-        #)
+        # )
         factor_a, factor_b = self._attempt_quantum_split(current_n)
 
         if factor_a and factor_b:
-            #print(f"[Split Found] {current_n} -> {factor_a} * {factor_b}")
+            # print(f"[Split Found] {current_n} -> {factor_a} * {factor_b}")
             return self._recursive_factor(factor_a) + self._recursive_factor(factor_b)
-        #print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
+        # print(f"[Fail] Could not split {current_n} quantumly. Returning as is.")
         return [current_n]
 
     def _find_period(self, r_measured, n_to_split):
@@ -391,8 +391,11 @@ class ShorAlgorithm:  # pylint: disable=too-few-public-methods
         if not candidates:
             return None, None
 
-        limit = (min(self.max_attempts, len(candidates))
-                 if self.max_attempts > 0 else len(candidates))
+        limit = (
+            min(self.max_attempts, len(candidates))
+            if self.max_attempts > 0
+            else len(candidates)
+        )
         attempts_count = 0
 
         while attempts_count < limit and candidates:
@@ -489,19 +492,18 @@ def solve(n: int | dict) -> dict:
 
     return {"answer": factors, "qasm": qasm_string}
 
+
 def testit(n, expected):
-    """ test shor's algorithm """
+    """test shor's algorithm"""
     result = solve(n)
     answer = result["answer"]
     assert answer == expected, f"Failed for N={n}, got {answer}, expected {expected}"
 
 
 def main():
-    """ run tests and such """
+    """run tests and such"""
     parser = argparse.ArgumentParser(description="Shor's Algorithm Quantum Solver")
-    parser.add_argument(
-        "N", type=int, nargs="*", help="The integer N to factor"
-    )
+    parser.add_argument("N", type=int, nargs="*", help="The integer N to factor")
     args = parser.parse_args()
     if len(args.N) == 0:
         # Run tests
@@ -510,7 +512,7 @@ def main():
         testit(77, [7, 11])
         testit(85, [5, 17])
         testit(105, [3, 5, 7])
-        testit(81, [3,3,3,3])
+        testit(81, [3, 3, 3, 3])
         testit(29, [29])
         testit(89, [89])
     else:

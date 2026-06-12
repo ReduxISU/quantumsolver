@@ -1,4 +1,5 @@
-""" quantum solver flask app initialization """
+"""quantum solver flask app initialization"""
+
 from flask import Flask
 
 app = Flask(__name__)

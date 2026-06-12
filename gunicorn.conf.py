@@ -1,4 +1,5 @@
 """Gunicorn configuration for quantumsolver."""
+
 # pylint: disable=invalid-name  # gunicorn requires lowercase config variable names
 import multiprocessing
 

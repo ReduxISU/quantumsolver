@@ -77,7 +77,6 @@ def dj_balanced(num_qubits, fbits):
     return qc
 
 
-
 def solve(data) -> dict:
     """Solves the Deutsch-Jozsa problem for the given function data.
     The input data is a json schema like this (old style):
@@ -107,7 +106,7 @@ def solve(data) -> dict:
     else:
         func = dj_balanced(nbits, fbits)
 
-    (answer, qc) = dj_algorithm(func)
+    answer, qc = dj_algorithm(func)
     return {"answer": answer, "qasm": qasm2.dumps(qc)}
 
 

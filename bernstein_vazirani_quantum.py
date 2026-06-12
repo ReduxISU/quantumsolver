@@ -50,7 +50,6 @@ def bv_algorithm(function: QuantumCircuit):
     return (result.get_memory()[0], qc)
 
 
-
 def solve(data) -> dict:
     """returns the answer as a binary string"""
 

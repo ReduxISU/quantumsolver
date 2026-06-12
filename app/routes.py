@@ -1,4 +1,5 @@
 """This is the flask router for the quantum solver app"""
+
 # pylint: disable=cyclic-import  # standard Flask app factory pattern
 
 import multiprocessing

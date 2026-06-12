@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name  # pytest fixture pattern
 """Tests for the Flask API routes."""
+
 import pytest
 from app import app as flask_app
 

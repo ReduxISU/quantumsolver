@@ -1,5 +1,6 @@
 # pylint: disable=redefined-outer-name  # pytest fixture pattern
 """Tests for the Deutsch-Jozsa quantum solver."""
+
 import pytest
 import deutsch_jozsa_quantum as dj
 from app import app as flask_app
@@ -12,9 +13,7 @@ LIST_CASES = [
     ([0, 1, 1, 0, 1, 0, 0, 1], "balanced"),
 ]
 
-DICT_CASES = [
-    ({"nbits": 3, "f": f}, expected) for f, expected in LIST_CASES
-]
+DICT_CASES = [({"nbits": 3, "f": f}, expected) for f, expected in LIST_CASES]
 
 
 @pytest.fixture
