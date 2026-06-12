@@ -36,6 +36,11 @@ jobs:
           . .venv/bin/activate
           pip-audit -r requirements.txt
 
+      - name: format check
+        run: |
+          . .venv/bin/activate
+          black --check . --exclude .venv
+
       - name: lint
         run: |
           . .venv/bin/activate
