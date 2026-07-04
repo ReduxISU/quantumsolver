@@ -18,10 +18,12 @@ The result is a dictionary:
 """
 
 import argparse
+
 import requests
 from qiskit import QuantumCircuit, qasm2
 from qiskit_aer import AerSimulator
-from bits import power_of_two_info
+
+from quantumsolver.bits import power_of_two_info
 
 
 def dj_algorithm(function: QuantumCircuit):

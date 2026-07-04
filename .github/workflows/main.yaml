@@ -2,9 +2,9 @@ name: build and unit tests
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main"]
 
 permissions:
   contents: read
@@ -20,36 +20,26 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v6
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v6
+      - name: Install uv
+        uses: astral-sh/setup-uv@v6
         with:
+          version: "0.10.9"
           python-version: ${{ matrix.python-version }}
 
-      - name: setup virtual env
-        run: python3 -m venv .venv
+      - name: Install dependencies
+        run: uv sync --all-groups --frozen
 
-      - name: setup packages
+      - name: Audit dependencies
         run: |
-          . .venv/bin/activate
-          python -m pip install --upgrade pip
-          python -m pip install -r requirements-dev.txt
+          uv export --frozen --no-dev --no-emit-project --no-hashes \
+            --format requirements-txt --output-file requirements.audit.txt
+          uv run pip-audit -r requirements.audit.txt
 
-      - name: audit dependencies
-        run: |
-          . .venv/bin/activate
-          pip-audit -r requirements.txt
+      - name: Format check (black)
+        run: uv run black --check .
 
-      - name: format check
-        run: |
-          . .venv/bin/activate
-          black --check . --exclude .venv
+      - name: Lint (ruff)
+        run: uv run ruff check .
 
-      - name: lint
-        run: |
-          . .venv/bin/activate
-          pylint --ignore=.venv --fail-under=9.75 *.py app/
-
-      - name: algorithm tests
-        run: |
-          . .venv/bin/activate
-          pytest -v --cov=. --cov-fail-under=85
+      - name: Unit tests
+        run: uv run pytest -v --cov=quantumsolver --cov-fail-under=85

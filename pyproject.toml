@@ -1,8 +1,46 @@
-[tool.pylint.messages_control]
-disable = ["duplicate-code"]
+[project]
+name = "quantumsolver"
+version = "0.1.0"
+description = "Qiskit-based quantum solvers for Redux, served as a Flask app."
+readme = "README.md"
+requires-python = ">=3.12"
+license = { file = "LICENSE" }
+dependencies = [
+    "Flask==3.1.3",
+    "requests==2.34.2",
+    "qiskit==2.4.1",
+    "qiskit-aer==0.17.2",
+    "gunicorn==24.1.1",
+]
+
+[dependency-groups]
+dev = [
+    "pytest",
+    "pytest-cov",
+    "ruff",
+    "pip-audit",
+    "black",
+]
+
+[build-system]
+requires = ["uv_build>=0.10,<0.11"]
+build-backend = "uv_build"
+
+[tool.black]
+target-version = ["py312", "py313"]
+
+[tool.ruff]
+line-length = 88
+# minimum supported version — keeps pyupgrade from emitting 3.13-only syntax
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "B", "UP"]
+# black owns line length; don't double-enforce it (it won't wrap comments/strings)
+ignore = ["E501"]
 
 [tool.coverage.run]
-omit = ["test_*.py", "quantumsolver.py"]
+source = ["quantumsolver"]
 
 [tool.coverage.report]
 exclude_lines = [

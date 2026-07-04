@@ -3,70 +3,57 @@
 This is a flask application that will integrates with [Redux](https://github.com/ReduxISU/Redux) to provide qiskit based solvers
 for problems.
 
-**Python 3.10–3.13 is required.**
+**Python 3.12+ is required** (CI tests 3.12 and 3.13). Dependencies and the environment are managed
+with [uv](https://docs.astral.sh/uv/).
 
 ## Getting Started
-To run this, create a python virtual environment and "enter" it
+
+Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then sync the
+environment (uv installs Python 3.13 automatically if it isn't already present):
 
 ```
 cd the-location-of-this-README.md
-python3 -m venv .venv
+uv sync
 ```
 
-For Windows:
+This creates `.venv/`, installs all runtime + dev dependencies, and installs the
+`quantumsolver` package itself.
+
+Run the development server. Redux expects the solver on port **27100**:
 
 ```
-.venv\scripts\Activate.bat
+uv run flask --app quantumsolver.app run --port 27100
 ```
 
-For anything else:
+Or run it under gunicorn (the production WSGI server), binding TCP only:
 
 ```
-. .venv/bin/activate
+uv run gunicorn --bind '[::]:27100' quantumsolver.app:app
 ```
 
-Then install the requirements:
-
-```
-pip install -r requirements.txt
-```
-
-For development (adds pytest, pylint, pip-audit):
-
-```
-pip install -r requirements-dev.txt
-```
-
-Tell it which app we want:
-
-For Windows:
-
-```
-set FLASK_APP=quantumsolver.py
-```
-
-For anything else:
-```
-export FLASK_APP=quantumsolver.py
-```
-
-Now, run it!
-
-```
-$ flask run
- * Serving Flask app 'quantumsolver.py'
- * Debug mode: off
-WARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.
- * Running on http://127.0.0.1:5000
-Press CTRL+C to quit
-```
+> The committed `gunicorn.conf.py` additionally binds a unix socket at
+> `/run/quantumsolver/gunicorn.sock` for nginx. That path is provisioned by systemd in
+> production (see `deploy/`), so pass `--config gunicorn.conf.py` locally only if you first
+> create it: `sudo mkdir -p /run/quantumsolver && sudo chown "$USER" /run/quantumsolver`.
 
 ## Running the Tests
 
-With the virtual environment active:
+```
+uv run pytest -v
+```
+
+To match CI, run against both supported Python versions:
 
 ```
-pytest -v
+uv run --python 3.12 pytest -v
+uv run --python 3.13 pytest -v
+```
+
+Lint (ruff) and format check (black):
+
+```
+uv run ruff check .
+uv run black --check .
 ```
 
 ## API Endpoints

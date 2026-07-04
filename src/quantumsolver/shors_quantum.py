@@ -293,7 +293,7 @@ def _check_perfect_power(n):
     return None
 
 
-class ShorAlgorithm:  # pylint: disable=too-few-public-methods
+class ShorAlgorithm:
     """
     Completes the full prime factorization using Shor's Algorithm.
     Recursively splits factors until only primes remain.

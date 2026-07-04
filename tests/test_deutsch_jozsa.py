@@ -1,9 +1,9 @@
-# pylint: disable=redefined-outer-name  # pytest fixture pattern
 """Tests for the Deutsch-Jozsa quantum solver."""
 
 import pytest
-import deutsch_jozsa_quantum as dj
-from app import app as flask_app
+
+from quantumsolver import deutsch_jozsa_quantum as dj
+from quantumsolver.app import app as flask_app
 
 # (f_bits, expected answer)
 LIST_CASES = [

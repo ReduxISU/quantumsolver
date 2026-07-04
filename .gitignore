@@ -9,6 +9,11 @@ quantumsolver.sln
 .coverage
 .pytest_cache/
 htmlcov/
+.ruff_cache/
+
+# build artifacts / generated files
+dist/
+requirements.audit.txt
 
 # editor/OS artifacts
 .DS_Store
