@@ -1,9 +1,9 @@
-# pylint: disable=redefined-outer-name  # pytest fixture pattern
 """Tests for the Shor's algorithm quantum solver."""
 
 import pytest
-import shors_quantum
-from app import app as flask_app
+
+from quantumsolver import shors_quantum
+from quantumsolver.app import app as flask_app
 
 # (N, expected prime factors)
 CASES = [

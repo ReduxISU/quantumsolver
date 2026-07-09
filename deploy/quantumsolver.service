@@ -15,7 +15,7 @@ RuntimeDirectoryMode=0755
 
 ExecStart=/home/redux/quantumsolver/.venv/bin/gunicorn \
     --config /home/redux/quantumsolver/gunicorn.conf.py \
-    quantumsolver:app
+    quantumsolver.app:app
 
 Restart=on-failure
 RestartSec=5

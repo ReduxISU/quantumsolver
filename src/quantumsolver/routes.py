@@ -1,19 +1,17 @@
 """This is the flask router for the quantum solver app"""
 
-# pylint: disable=cyclic-import  # standard Flask app factory pattern
-
 import multiprocessing
 
 from flask import request
 
-import bernstein_vazirani_quantum
-import deutsch_jozsa_quantum
-import deutsch_quantum
-import sat_quantum
-import shors_quantum
-from app import app
-
-# pylint: disable=missing-function-docstring
+from quantumsolver import (
+    bernstein_vazirani_quantum,
+    deutsch_jozsa_quantum,
+    deutsch_quantum,
+    sat_quantum,
+    shors_quantum,
+)
+from quantumsolver.app import app
 
 
 @app.route("/")

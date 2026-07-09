@@ -3,7 +3,6 @@ set -euo pipefail
 
 REF="${1:-main}"
 DEPLOY_DIR="/home/redux/quantumsolver"
-VENV="$DEPLOY_DIR/.venv"
 SERVICE="quantumsolver.service"
 
 cd "$DEPLOY_DIR"
@@ -16,11 +15,9 @@ echo "==> Resetting to ${REF}..."
 git reset --hard "origin/${REF}" 2>/dev/null || git reset --hard "${REF}"
 
 echo "==> Syncing dependencies..."
-if [ ! -d "$VENV" ]; then
-    python3 -m venv "$VENV"
-    "$VENV/bin/pip" install --quiet --upgrade pip
-fi
-"$VENV/bin/pip" install --quiet --upgrade -r requirements.txt
+# Creates/updates .venv from uv.lock (runtime deps only) and installs the
+# quantumsolver package. Requires uv on the deploy user's PATH.
+uv sync --frozen --no-dev
 
 echo "==> Restarting service..."
 sudo /usr/bin/systemctl restart "$SERVICE"
