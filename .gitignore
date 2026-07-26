@@ -15,6 +15,10 @@ htmlcov/
 dist/
 requirements.audit.txt
 
+# rbs pipeline output
+.rbs/
+report.md
+
 # editor/OS artifacts
 .DS_Store
 *.swp

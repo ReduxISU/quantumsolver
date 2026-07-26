@@ -1,0 +1,18 @@
+# Redux Build System pipeline config. See github.com/ReduxISU/Redux_Build_System.
+engine = "uv"
+package = "quantumsolver"
+
+[unit-test]
+python-versions = ["3.12", "3.13"]
+coverage-min = 85
+
+[artifact]
+image = "ghcr.io/reduxisu/quantumsolver"
+port = 27100
+health-path = "/health"
+
+[integration]
+command = "uv run pytest tests/integration -v"
+
+[push]
+on-branch = "main"
