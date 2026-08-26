@@ -12,7 +12,10 @@ port = 27100
 health-path = "/health"
 
 [integration]
-command = "uv run pytest tests/integration -v"
+# Lives outside tests/ so a bare `pytest` (what `rbs unit-test` runs) never collects it;
+# see [tool.pytest.ini_options] in pyproject.toml. No [[integration.services]] needed —
+# quantumsolver is a leaf, so the ephemeral stack is just the artifact itself.
+command = "uv run pytest integration -v"
 
 [push]
 on-branch = "main"
