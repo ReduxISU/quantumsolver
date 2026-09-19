@@ -17,4 +17,6 @@ concurrency:
 jobs:
   build-test:
     uses: ReduxISU/Redux_Build_System/.github/workflows/ci.yml@main
+    with: { dry-run: true }
     secrets: inherit
+
