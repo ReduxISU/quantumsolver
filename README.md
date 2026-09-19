@@ -1,4 +1,4 @@
-[![build and unit tests](https://github.com/ReduxISU/quantumsolver/actions/workflows/main.yaml/badge.svg)](https://github.com/ReduxISU/quantumsolver/actions/workflows/main.yaml)
+[![rbs](https://github.com/ReduxISU/quantumsolver/actions/workflows/rbs.yml/badge.svg)](https://github.com/ReduxISU/quantumsolver/actions/workflows/rbs.yml)
 
 This is a flask application that will integrates with [Redux](https://github.com/ReduxISU/Redux) to provide qiskit based solvers
 for problems.
@@ -55,6 +55,21 @@ Lint (ruff) and format check (black):
 uv run ruff check .
 uv run black --check .
 ```
+
+## CI and publishing
+
+One workflow, `.github/workflows/rbs.yml`, runs the whole pipeline through the
+[Redux Build System](https://github.com/ReduxISU/Redux_Build_System) inside this repo's devcontainer:
+`audit → format-check → lint → unit-test (3.12, 3.13) → build → integration-test → push`. Gates and
+thresholds live in `rbs.toml`. The same command runs locally:
+
+```
+rbs ci
+```
+
+On a push to `main`, and only if every gate passed, `push` publishes the exact image the
+integration tests ran against to `ghcr.io/reduxisu/quantumsolver` as `:<sha7>` and `:latest`. On
+pull requests it reports `skipped`.
 
 ## API Endpoints
 
