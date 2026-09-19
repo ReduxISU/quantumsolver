@@ -39,6 +39,12 @@ select = ["E", "F", "I", "W", "B", "UP"]
 # black owns line length; don't double-enforce it (it won't wrap comments/strings)
 ignore = ["E501"]
 
+[tool.pytest.ini_options]
+# `rbs unit-test` runs a bare `pytest`, which would otherwise collect from the repo root and
+# sweep up integration/ — a suite that needs a running container. Keep the default run to tests/;
+# `rbs integration-test` names integration/ explicitly, which overrides this.
+testpaths = ["tests"]
+
 [tool.coverage.run]
 source = ["quantumsolver"]
 
