@@ -18,7 +18,9 @@ The result is a dictionary:
      'cut_weight': total weight of the cut,
      'answer_bitstring': one character per node, '1' = in S,
      'seed': the seed used,
-     'qasm': the optimized QAOA circuit}
+     'gammas': the optimized cost-layer angles, one per layer,
+     'betas': the optimized mixer-layer angles, one per layer,
+     'qasm': the optimized QAOA circuit, in h/cx/rz/rx gates}
   or {'error': message} for invalid input.
 """
 
@@ -27,8 +29,8 @@ import itertools
 
 import numpy as np
 import requests
-from qiskit import qasm2, transpile
-from qiskit.circuit.library import qaoa_ansatz
+from qiskit import QuantumCircuit, qasm2
+from qiskit.circuit import ParameterVector
 from qiskit.primitives import StatevectorEstimator, StatevectorSampler
 from qiskit.quantum_info import SparsePauliOp
 from scipy.optimize import minimize
@@ -41,7 +43,6 @@ SHOTS = 10000
 # The estimator is exact and COBYLA is deterministic, so sampling is the only
 # random step; a fixed default seed makes every response reproducible.
 SEED = 6680
-BASIS_GATES = ["rz", "sx", "x", "cx"]
 
 
 def parse_graph(data):
@@ -90,6 +91,52 @@ def cost_hamiltonian(n, weights):
     return SparsePauliOp.from_sparse_list(terms, num_qubits=n)
 
 
+def edge_rounds(weights):
+    """Split the edges into rounds in which no two edges share a node (a greedy
+    edge colouring), as [[(i, j, w), ...], ...]. Gates on one round's edges
+    touch disjoint qubits, so they can run, and be drawn, side by side."""
+
+    rounds = []
+    for (i, j), w in sorted(weights.items()):
+        for r in rounds:
+            if not r["used"] & {i, j}:
+                r["edges"].append((i, j, w))
+                r["used"] |= {i, j}
+                break
+        else:
+            rounds.append({"edges": [(i, j, w)], "used": {i, j}})
+    return [r["edges"] for r in rounds]
+
+
+def qaoa_circuit(n, weights, reps):
+    """The QAOA ansatz for cost_hamiltonian(n, weights), built from h, cx, rz
+    and rx so its QASM reads as the textbook circuit.
+
+    Each layer k applies the cost unitary exp(-i gamma_k H), whose term
+    (w / 2s) Z_i Z_j is RZZ(gamma_k w / s) = cx(i, j) rz(gamma_k w / s, j)
+    cx(i, j), then the mixer exp(-i beta_k sum X) = rx(2 beta_k) on every
+    qubit. This is the same state qaoa_ansatz builds, up to a global phase,
+    and the parameters keep its names so they sort the same way:
+    [beta[0..reps-1], gamma[0..reps-1]].
+    """
+
+    scale = max(abs(w) for w in weights.values())
+    beta = ParameterVector("β", reps)
+    gamma = ParameterVector("γ", reps)
+    circuit = QuantumCircuit(n)
+    circuit.h(range(n))
+    for k in range(reps):
+        for edges in edge_rounds(weights):
+            for i, j, _ in edges:
+                circuit.cx(i, j)
+            for _, j, w in edges:
+                circuit.rz(gamma[k] * w / scale, j)
+            for i, j, _ in edges:
+                circuit.cx(i, j)
+        circuit.rx(2 * beta[k], range(n))
+    return circuit
+
+
 def best_partition(counts, weights, n):
     """Pick the sampled bitstring with the largest cut, breaking ties by
     frequency. Partitions with S or T empty are skipped since Redux requires
@@ -136,17 +183,12 @@ def solve(data) -> dict:
         circuit = None
     else:
         hamiltonian = cost_hamiltonian(n, weights)
-        # Lower the PauliEvolutionGates to standard gates once, up front. Left
-        # as-is, the simulator exponentiates a sparse matrix for every gate on
-        # every COBYLA step, which is orders of magnitude slower.
-        ansatz = transpile(
-            qaoa_ansatz(hamiltonian, reps=REPS),
-            basis_gates=BASIS_GATES,
-            optimization_level=1,
-        )
+        # Built from standard gates, so the simulator runs it directly (no
+        # PauliEvolutionGates to exponentiate on every COBYLA step).
+        ansatz = qaoa_circuit(n, weights, REPS)
 
         # Same warm start as the notebook: midpoints of the beta and gamma
-        # periods. qaoa_ansatz orders its parameters [betas..., gammas...].
+        # periods. The parameters sort as [betas..., gammas...].
         init_params = [np.pi / 2] * REPS + [np.pi] * REPS
 
         estimator = StatevectorEstimator()
@@ -180,6 +222,8 @@ def solve(data) -> dict:
         "seed": seed,
     }
     if circuit is not None:
+        r["betas"] = [float(b) for b in result.x[:REPS]]
+        r["gammas"] = [float(g) for g in result.x[REPS:]]
         r["qasm"] = qasm2.dumps(circuit)
     return r
 

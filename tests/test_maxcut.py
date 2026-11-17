@@ -1,6 +1,11 @@
 """Tests for the Max-Cut quantum solver."""
 
+import re
+
+import numpy as np
 import pytest
+from qiskit.circuit.library import qaoa_ansatz
+from qiskit.quantum_info import Statevector
 
 from quantumsolver import maxcut_quantum
 from quantumsolver.app import app as flask_app
@@ -83,6 +88,47 @@ def test_custom_seed():
     assert result["seed"] == 1
     check(REDUX_DEFAULT, result)
     assert maxcut_quantum.solve({**REDUX_DEFAULT, "seed": 1}) == result
+
+
+@pytest.mark.parametrize("data", [REDUX_DEFAULT, NOTEBOOK_GRAPH, TEN_NODES])
+def test_qaoa_circuit_matches_qaoa_ansatz(data):
+    """The hand-built circuit prepares the same state as qiskit's qaoa_ansatz
+    (up to global phase) and orders its parameters the same way."""
+    nodes, weights = maxcut_quantum.parse_graph(data)
+    n = len(nodes)
+    ours = maxcut_quantum.qaoa_circuit(n, weights, maxcut_quantum.REPS)
+    reference = qaoa_ansatz(
+        maxcut_quantum.cost_hamiltonian(n, weights), reps=maxcut_quantum.REPS
+    )
+    assert [p.name for p in ours.parameters] == [p.name for p in reference.parameters]
+    rng = np.random.default_rng(0)
+    for _ in range(3):
+        params = rng.uniform(-np.pi, np.pi, ours.num_parameters)
+        a = Statevector(ours.assign_parameters(params)).data
+        b = Statevector(reference.assign_parameters(params)).data
+        assert abs(np.vdot(a, b)) == pytest.approx(1.0)
+
+
+def test_edge_rounds_are_matchings_covering_every_edge():
+    """Each round's edges share no node, and every edge is in exactly one round."""
+    _, weights = maxcut_quantum.parse_graph(TEN_NODES)
+    rounds = maxcut_quantum.edge_rounds(weights)
+    for edges in rounds:
+        touched = [q for i, j, _ in edges for q in (i, j)]
+        assert len(touched) == len(set(touched))
+    assert sorted((i, j) for edges in rounds for i, j, _ in edges) == sorted(weights)
+
+
+def test_response_has_angles_and_textbook_gates():
+    """The response carries one gamma and one beta per layer, and the qasm uses
+    only h, cx, rz, rx and measurements."""
+    result = maxcut_quantum.solve(REDUX_DEFAULT)
+    assert len(result["gammas"]) == maxcut_quantum.REPS
+    assert len(result["betas"]) == maxcut_quantum.REPS
+    gates = set(re.findall(r"^([a-z]+)[ (]", result["qasm"], re.MULTILINE))
+    gates -= {"include", "qreg", "creg"}
+    assert gates <= {"h", "cx", "rz", "rx", "barrier", "measure"}
+    assert {"h", "cx", "rz", "rx", "measure"} <= gates
 
 
 def test_fractional_and_large_weights():

@@ -132,5 +132,8 @@ the maximum. An optional `"seed"` (a non-negative integer, default 6680) seeds t
 sampler, the only random step, so the same request always gets the same response.
 
 Response includes `"answer"` (the S side in Redux certificate format, e.g. `"{1,3}"`), `"cut_weight"`,
-`"answer_bitstring"` (one character per node, `1` = in S), `"seed"` (the seed used), and `"qasm"`. Invalid input returns
+`"answer_bitstring"` (one character per node, `1` = in S), `"seed"` (the seed used), `"gammas"` and
+`"betas"` (the optimized cost- and mixer-layer angles, one per layer), and `"qasm"`. The circuit is
+written in `h`, `cx`, `rz` and `rx` gates: a Hadamard layer, then per layer a `cx`·`rz`·`cx` for each
+edge and an `rx` on each node. Invalid input returns
 `{"error": ...}` with no `"answer"`.
