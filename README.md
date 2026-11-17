@@ -128,8 +128,9 @@ graph's nodes into two non-empty sets S and T that maximizes the total weight of
 ```
 Each edge is `[u, v, weight]`, or `[u, v]` for weight 1. Parallel edges are summed, self-loops are
 ignored, and graphs are limited to 16 nodes. QAOA is approximate, so the cut is not guaranteed to be
-the maximum.
+the maximum. An optional `"seed"` (a non-negative integer, default 6680) seeds the simulator's
+sampler, the only random step, so the same request always gets the same response.
 
 Response includes `"answer"` (the S side in Redux certificate format, e.g. `"{1,3}"`), `"cut_weight"`,
-`"answer_bitstring"` (one character per node, `1` = in S), and `"qasm"`. Invalid input returns
+`"answer_bitstring"` (one character per node, `1` = in S), `"seed"` (the seed used), and `"qasm"`. Invalid input returns
 `{"error": ...}` with no `"answer"`.

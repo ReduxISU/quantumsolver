@@ -61,6 +61,30 @@ def test_api(client):
     check(REDUX_DEFAULT, resp.json)
 
 
+# A 10-node graph where the sample, not just the angles, decides the answer.
+TEN_NODES = {
+    "nodes": [str(i) for i in range(10)],
+    "edges": [[str(i), str((i * 3 + 1) % 10), i % 4 + 1] for i in range(10)]
+    + [[str(i), str((i + 5) % 10), 2] for i in range(5)],
+}
+
+
+@pytest.mark.parametrize("data", [REDUX_DEFAULT, TEN_NODES])
+def test_seeded_is_reproducible(data):
+    """With the default seed, the same input gives the same response."""
+    first = maxcut_quantum.solve(data)
+    assert first["seed"] == maxcut_quantum.SEED
+    assert maxcut_quantum.solve(data) == first
+
+
+def test_custom_seed():
+    """A request's seed is used and echoed back."""
+    result = maxcut_quantum.solve({**REDUX_DEFAULT, "seed": 1})
+    assert result["seed"] == 1
+    check(REDUX_DEFAULT, result)
+    assert maxcut_quantum.solve({**REDUX_DEFAULT, "seed": 1}) == result
+
+
 def test_fractional_and_large_weights():
     """Weight scale doesn't matter: the same graph with weights scaled up or
     to fractions gives the same partition quality."""
@@ -100,6 +124,10 @@ def test_no_edges():
         {"nodes": ["a", "b"], "edges": [["a", "z", 1]]},
         {"nodes": ["a", "b"], "edges": [["a"]]},
         {"edges": []},
+        {"nodes": ["a", "b"], "edges": [], "seed": -1},
+        {"nodes": ["a", "b"], "edges": [], "seed": "6680"},
+        {"nodes": ["a", "b"], "edges": [], "seed": 1.5},
+        {"nodes": ["a", "b"], "edges": [], "seed": True},
         {"nodes": [str(i) for i in range(maxcut_quantum.MAX_NODES + 1)], "edges": []},
     ],
 )

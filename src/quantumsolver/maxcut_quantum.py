@@ -7,13 +7,17 @@ maximizes the total weight of the edges crossing between them.
 
 The input is a dictionary:
     {'nodes': ['1', '2', ...],
-     'edges': [['1', '2', 5], ['2', '3', 1.5], ...]}
-  each edge is [u, v] or [u, v, weight]; a missing weight is 1.
+     'edges': [['1', '2', 5], ['2', '3', 1.5], ...],
+     'seed': 6680}
+  each edge is [u, v] or [u, v, weight]; a missing weight is 1. 'seed' is
+  optional (default SEED) and seeds the sampler, the only random step, so the
+  same input and seed always give the same result.
 
 The result is a dictionary:
     {'answer': '{1,3}' (the nodes on the S side, Redux certificate format),
      'cut_weight': total weight of the cut,
      'answer_bitstring': one character per node, '1' = in S,
+     'seed': the seed used,
      'qasm': the optimized QAOA circuit}
   or {'error': message} for invalid input.
 """
@@ -34,6 +38,9 @@ from scipy.optimize import minimize
 MAX_NODES = 16
 REPS = 2
 SHOTS = 10000
+# The estimator is exact and COBYLA is deterministic, so sampling is the only
+# random step; a fixed default seed makes every response reproducible.
+SEED = 6680
 BASIS_GATES = ["rz", "sx", "x", "cx"]
 
 
@@ -111,6 +118,11 @@ def solve(data) -> dict:
     except (KeyError, TypeError, ValueError) as e:
         return {"error": f"invalid graph: {e}"}
 
+    seed = data.get("seed", SEED)
+    # bool is an int subclass; numpy rejects negative seeds.
+    if not isinstance(seed, int) or isinstance(seed, bool) or seed < 0:
+        return {"error": f"invalid seed {seed!r}, need a non-negative integer"}
+
     n = len(nodes)
     if n < 2:
         return {"error": "need at least 2 nodes to form a cut"}
@@ -148,7 +160,7 @@ def solve(data) -> dict:
         circuit = ansatz.assign_parameters(result.x)
         circuit.measure_all()
         counts = (
-            StatevectorSampler()
+            StatevectorSampler(seed=seed)
             .run([circuit], shots=SHOTS)
             .result()[0]
             .data.meas.get_counts()
@@ -165,6 +177,7 @@ def solve(data) -> dict:
         "answer": answer,
         "cut_weight": cut_weight(weights, x),
         "answer_bitstring": "".join(str(b) for b in x),
+        "seed": seed,
     }
     if circuit is not None:
         r["qasm"] = qasm2.dumps(circuit)
