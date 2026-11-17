@@ -53,3 +53,21 @@ def test_bernstein_vazirani(base_url, f, expected):
     )
     assert resp.status_code == 200
     assert resp.json()["answer"] == expected
+
+
+def test_maxcut(base_url):
+    """POST /maxcut-quantum finds the maximum cut of Redux's default instance."""
+    data = {
+        "nodes": ["1", "2", "3", "4", "5"],
+        "edges": [
+            ["2", "1", 5],
+            ["1", "3", 4],
+            ["2", "3", 2],
+            ["3", "5", 1],
+            ["2", "4", 4],
+            ["4", "5", 2],
+        ],
+    }
+    resp = requests.post(f"{base_url}/maxcut-quantum", json=data, timeout=TIMEOUT)
+    assert resp.status_code == 200
+    assert resp.json()["cut_weight"] == 15
