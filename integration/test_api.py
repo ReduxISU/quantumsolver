@@ -8,7 +8,7 @@ the way Redux does.
 import pytest
 import requests
 
-# Generous: each solve spawns a process that re-imports qiskit, and the app self-limits at 25s.
+# Generous: each solve spawns a process that re-imports qiskit, and the app self-limits at 30s.
 TIMEOUT = 40
 
 # ([f0, f1], expected classification)

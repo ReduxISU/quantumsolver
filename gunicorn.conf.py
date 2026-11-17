@@ -2,13 +2,13 @@
 
 import multiprocessing
 
-# Each request blocks for up to 25 s (internal timeout), so sync workers are correct.
+# Each request blocks for up to SOLVE_TIMEOUT (30 s, routes.py), so sync workers are correct.
 workers = multiprocessing.cpu_count() * 2 + 1
 worker_class = "sync"
 
-# Must exceed the 25-second in-app timeout so gunicorn doesn't kill a legitimately
+# Must exceed routes.SOLVE_TIMEOUT (30 s) so gunicorn doesn't kill a legitimately
 # running solver before it has a chance to respond.
-timeout = 30
+timeout = 35
 
 bind = [
     "unix:/run/quantumsolver/gunicorn.sock",

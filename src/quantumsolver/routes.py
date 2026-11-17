@@ -1,6 +1,9 @@
 """This is the flask router for the quantum solver app"""
 
 import multiprocessing
+import select
+import socket
+import time
 
 from flask import request
 
@@ -13,6 +16,12 @@ from quantumsolver import (
     shors_quantum,
 )
 from quantumsolver.app import app
+
+# The longest a solve may run before it is terminated and "timeout" is returned.
+# gunicorn.conf.py's worker timeout must stay above this.
+SOLVE_TIMEOUT = 30
+# How often a running solve checks whether the caller has gone away.
+POLL_INTERVAL = 0.2
 
 
 @app.route("/")
@@ -108,13 +117,46 @@ def solver_maxcut_quantum():
     return run_with_timeout(maxcut_target, data)
 
 
+def client_gone(sock):
+    """True once the caller has closed the connection.
+
+    A closed TCP connection polls readable and reads EOF. MSG_PEEK leaves any
+    real data (e.g. a keep-alive client's next request) unread, so only EOF or
+    a reset counts as gone.
+    """
+    if sock is None:
+        return False
+    readable, _, _ = select.select([sock], [], [], 0)
+    if not readable:
+        return False
+    try:
+        return sock.recv(1, socket.MSG_PEEK | socket.MSG_DONTWAIT) == b""
+    except BlockingIOError:
+        return False
+    except OSError:
+        # ECONNRESET and friends: the caller is gone.
+        return True
+
+
 def run_with_timeout(func, data):
-    """run a function with a timeout using multiprocessing"""
+    """run a function in a separate process, terminating it after
+    SOLVE_TIMEOUT seconds or as soon as the caller closes the connection"""
+    # gunicorn exposes the client socket; the flask dev server and test client
+    # don't, so there disconnects go unnoticed and only the timeout applies.
+    sock = request.environ.get("gunicorn.socket")
     ctx = multiprocessing.get_context("spawn")
     queue = ctx.Queue()
     process = ctx.Process(target=func, args=(queue, data))
     process.start()
-    process.join(25)
+
+    deadline = time.monotonic() + SOLVE_TIMEOUT
+    while process.is_alive() and time.monotonic() < deadline:
+        process.join(POLL_INTERVAL)
+        if process.is_alive() and client_gone(sock):
+            process.terminate()
+            process.join()
+            # Nobody is left to read this.
+            return {"answer": "client closed connection"}
 
     if process.is_alive():
         process.terminate()
