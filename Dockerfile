@@ -1,6 +1,6 @@
 # The uv version is pinned so builds are repeatable; Dependabot (docker ecosystem) bumps it.
 # ---- build stage: produce a wheel with uv's build backend ----
-FROM ghcr.io/astral-sh/uv:0.13.9-python3.13-trixie-slim AS build
+FROM ghcr.io/astral-sh/uv:0.13.9-python3.14-trixie-slim AS build
 
 WORKDIR /src
 COPY . .
@@ -10,7 +10,7 @@ RUN uv build --wheel --out-dir /dist \
     && uv export --locked --no-dev --no-emit-project -o /dist/requirements.txt
 
 # ---- runtime stage: install the wheel that was just built ----
-FROM ghcr.io/astral-sh/uv:0.13.9-python3.13-trixie-slim
+FROM ghcr.io/astral-sh/uv:0.13.9-python3.14-trixie-slim
 
 RUN groupadd --system quantumsolver \
     && useradd --system --gid quantumsolver --no-create-home quantumsolver

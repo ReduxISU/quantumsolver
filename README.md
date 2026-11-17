@@ -3,13 +3,13 @@
 This is a flask application that will integrates with [Redux](https://github.com/ReduxISU/Redux) to provide qiskit based solvers
 for problems.
 
-**Python 3.12+ is required** (CI tests 3.12 and 3.13). Dependencies and the environment are managed
+**Python 3.12+ is required** (CI tests 3.12, 3.13 and 3.14). Dependencies and the environment are managed
 with [uv](https://docs.astral.sh/uv/).
 
 ## Getting Started
 
 Install [uv](https://docs.astral.sh/uv/getting-started/installation/), then sync the
-environment (uv installs Python 3.13 automatically if it isn't already present):
+environment (uv installs Python 3.14 automatically if it isn't already present):
 
 ```
 cd the-location-of-this-README.md
@@ -47,6 +47,7 @@ To match CI, run against both supported Python versions:
 ```
 uv run --python 3.12 pytest -v
 uv run --python 3.13 pytest -v
+uv run --python 3.14 pytest -v
 ```
 
 Lint (ruff) and format check (black):
@@ -60,7 +61,7 @@ uv run black --check .
 
 One workflow, `.github/workflows/rbs.yml`, runs the whole pipeline through the
 [Redux Build System](https://github.com/ReduxISU/Redux_Build_System) inside this repo's devcontainer:
-`audit → format-check → lint → unit-test (3.12, 3.13) → build → integration-test → push`. Gates and
+`audit → format-check → lint → unit-test (3.12, 3.13, 3.14) → build → integration-test → push`. Gates and
 thresholds live in `rbs.toml`. The same command runs locally:
 
 ```

@@ -3,7 +3,7 @@ engine = "uv"
 package = "quantumsolver"
 
 [unit-test]
-python-versions = ["3.12", "3.13"]
+python-versions = ["3.12", "3.13", "3.14"]
 coverage-min = 85
 
 [artifact]
