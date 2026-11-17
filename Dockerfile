@@ -1,21 +1,28 @@
+# The uv version is pinned so builds are repeatable; Dependabot (docker ecosystem) bumps it.
 # ---- build stage: produce a wheel with uv's build backend ----
-FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim AS build
+FROM ghcr.io/astral-sh/uv:0.13.9-python3.13-trixie-slim AS build
 
 WORKDIR /src
 COPY . .
-RUN uv build --wheel --out-dir /dist
+# The wheel, plus the runtime deps pinned (with hashes) exactly as uv.lock has them. --locked fails the
+# build if uv.lock is out of date with pyproject.toml (--frozen would export the stale lock silently).
+RUN uv build --wheel --out-dir /dist \
+    && uv export --locked --no-dev --no-emit-project -o /dist/requirements.txt
 
 # ---- runtime stage: install the wheel that was just built ----
-FROM ghcr.io/astral-sh/uv:python3.13-trixie-slim
+FROM ghcr.io/astral-sh/uv:0.13.9-python3.13-trixie-slim
 
 RUN groupadd --system quantumsolver \
     && useradd --system --gid quantumsolver --no-create-home quantumsolver
 
 WORKDIR /app
 
-COPY --from=build /dist/*.whl /tmp/
-# Installs the quantumsolver package plus its runtime deps (Flask, qiskit, gunicorn, ...).
-RUN uv pip install --system --no-cache /tmp/*.whl && rm /tmp/*.whl
+COPY --from=build /dist/ /tmp/dist/
+# Runtime deps (Flask, qiskit, gunicorn, ...) at the versions in uv.lock, then the quantumsolver wheel
+# alone, so nothing is resolved fresh from PyPI and the image matches what pip-audit checked.
+RUN uv pip install --system --no-cache --require-hashes -r /tmp/dist/requirements.txt \
+    && uv pip install --system --no-cache --no-deps /tmp/dist/*.whl \
+    && rm -rf /tmp/dist
 
 COPY --chown=quantumsolver:quantumsolver gunicorn.conf.py .
 
