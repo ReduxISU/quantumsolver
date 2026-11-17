@@ -34,7 +34,7 @@ from qiskit.quantum_info import SparsePauliOp
 from scipy.optimize import minimize
 
 # Statevector simulation costs 2^n per evaluation and COBYLA needs dozens of
-# them, so keep instances well inside the router's 25 second timeout.
+# them, so keep instances well inside the router's 30 second timeout.
 MAX_NODES = 16
 REPS = 2
 SHOTS = 10000

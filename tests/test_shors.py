@@ -17,7 +17,7 @@ CASES = [
     (89, [89]),
 ]
 
-# Subset used for API tests — small N values that complete well within the 25s timeout
+# Subset used for API tests — small N values that complete well within the 30s timeout
 API_CASES = [(15, [3, 5]), (21, [3, 7]), (81, [3, 3, 3, 3]), (29, [29])]
 
 

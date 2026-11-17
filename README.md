@@ -76,6 +76,10 @@ pull requests it reports `skipped`.
 
 All solver endpoints accept `POST` with a JSON body and return a JSON object containing at minimum an `"answer"` field and a `"qasm"` field with the generated circuit.
 
+Each solve runs in its own process. It is terminated, returning `{"answer": "timeout"}`, if it is
+still running after 30 seconds, or as soon as the caller closes its connection (when running under
+gunicorn), so an abandoned request doesn't keep a worker busy.
+
 ### `GET /health`
 Returns `{"status": "ok"}`.
 
