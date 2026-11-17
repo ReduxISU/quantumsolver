@@ -8,6 +8,7 @@ from quantumsolver import (
     bernstein_vazirani_quantum,
     deutsch_jozsa_quantum,
     deutsch_quantum,
+    maxcut_quantum,
     sat_quantum,
     shors_quantum,
 )
@@ -91,6 +92,20 @@ def solver_prime_factorization_quantum():
         return "expected json input"
     data = request.json
     return run_with_timeout(shors_target, data)
+
+
+def maxcut_target(queue, data):
+    """solve using QAOA and put result in queue"""
+    queue.put(maxcut_quantum.solve(data))
+
+
+@app.route("/maxcut-quantum", methods=["POST"])
+def solver_maxcut_quantum():
+    """max-cut quantum endpoint"""
+    if not request.is_json:
+        return "expected json input"
+    data = request.json
+    return run_with_timeout(maxcut_target, data)
 
 
 def run_with_timeout(func, data):

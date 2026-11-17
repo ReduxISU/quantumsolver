@@ -118,3 +118,19 @@ Shor's algorithm. Prime-factorizes an integer (must be < 512).
 ```json
 {"N": 15}
 ```
+
+### `POST /maxcut-quantum`
+QAOA (Quantum Approximate Optimization Algorithm). Finds a partition of a weighted undirected
+graph's nodes into two non-empty sets S and T that maximizes the total weight of edges between them.
+
+```json
+{"nodes": ["1", "2", "3"], "edges": [["1", "2", 4], ["2", "3", 2], ["1", "3", 3]]}
+```
+Each edge is `[u, v, weight]`, or `[u, v]` for weight 1. Parallel edges are summed, self-loops are
+ignored, and graphs are limited to 16 nodes. QAOA is approximate, so the cut is not guaranteed to be
+the maximum. An optional `"seed"` (a non-negative integer, default 6680) seeds the simulator's
+sampler, the only random step, so the same request always gets the same response.
+
+Response includes `"answer"` (the S side in Redux certificate format, e.g. `"{1,3}"`), `"cut_weight"`,
+`"answer_bitstring"` (one character per node, `1` = in S), `"seed"` (the seed used), and `"qasm"`. Invalid input returns
+`{"error": ...}` with no `"answer"`.
